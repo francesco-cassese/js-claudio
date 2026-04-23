@@ -1,9 +1,10 @@
+'use strict';
 
 // ########################################################################################
 // INTERFACCIA UTENTE (DOM E RENDERING)
 // ########################################################################################
 
-// Elementi del DOM necessari per l'interazione
+// Seleziono gli elementi HTML che mi servono per leggere e scrivere i dati
 const chatHistoryEl = document.querySelector('#chat-history');
 const sendMessageFormEl = document.querySelector('#send-message-form');
 const bottoneInvio = sendMessageFormEl.querySelector('button[type="submit"]');
@@ -14,56 +15,57 @@ const userMessageInputEl = document.querySelector('#user-message');
 // LOGICA DI AVVIO E GESTIONE EVENTI
 // ########################################################################################
 
-
-// Controllo sicurezza: Verifica se la chiave API è stata configurata correttamente
+// Controllo iniziale: mi assicuro che la chiave segreta sia presente nel file config.js
 if (typeof CLAUDE_API_KEY === 'undefined' || typeof CLAUDE_API_KEY !== 'string' || CLAUDE_API_KEY.trim() === '') {
-    alert("Rinomina il file config.js.example e riempilo con le variabili corrette");
+    alert("Attenzione: manca la chiave API nel file di configurazione!");       // Avviso l'utente se manca la configurazione
 }
 
+/**
+ * Gestisco l'evento di invio del form (pressione tasto invio o click bottone)
+ */
 sendMessageFormEl.addEventListener('submit', (event) => {
-    event.preventDefault();                                                // Evito che la pagina si ricarichi
+    event.preventDefault();                                                    // Blocco il ricaricamento della pagina del browser
 
-    // Prendo quello che l'utente ha scritto nel campo di testo
+    // Recupero il testo scritto dall'utente nel campo di input
     const valoreInput = userMessageInputEl.value;
 
-    // Chiedo alla mia funziona se il messaggio è validato
-    const risultato = controllaInput(valoreInput);
+    // Chiedo alla funzione di validazione (in function.js) se il testo va bene
+    const risultato = validaMessaggio(valoreInput);                            // Ora uso la nuova funzione "validaMessaggio"
 
-    // Controllo se il risultato è diverso da "corretto"
+    // Verifico se la validazione ha riscontrato qualche anomalia
     if (risultato.stato !== statoErroriInput.corretto) {
 
-        // Se è nullo, avviso l'utente del problema tecnico
+        // Se il dato è inesistente (nullo), comunico l'errore tecnico
         if (risultato.stato === statoErroriInput.nullo) {
-            alert("Problema tecnico: messaggio inesistente.");
+            alert("Errore, il dato non è stato ricevuto.");
         }
-        // Se è vuoto, ricordo all'utente di scrivere qualcosa
+        // Se l'utente ha premuto invio senza scrivere nulla
         else if (risultato.stato === statoErroriInput.vuoto) {
-            alert("Non puoi inviare un messaggio vuoto!");
+            alert("Per favore, scrivi qualcosa prima di inviare!");
         }
-        // Se è troppo corto, gli mostro anche cosa ha scritto per chiarezza
+        // Se il messaggio è troppo breve per avere senso
         else if (risultato.stato === statoErroriInput.troppoCorto) {
-            alert(`"${risultato.valore}" è troppo corto.`);
+            alert(`Il messaggio "${risultato.valore}" è troppo breve.`);
         }
 
-        return;                                                            // Esco subito: non voglio che il codice prosegua
+        return;                                                                // Mi fermo qui: non procedo con la chiamata API
     }
-    bottoneInvio.disabled = true;                                              // Spengo il bottone appena l'utente clicca
-    bottoneInvio.textContent = "...";                                          // Cambio il testo per dare feedback
 
-    // Se tutto è corretto, invio a Claude solo il valore pulito 
-    richiediAClaude(risultato.valore)
+    bottoneInvio.disabled = true;                                              // Disabilito il tasto per evitare doppi invii
+    bottoneInvio.textContent = "...";                                          // Cambio il testo per dare feedback visivo
+
+    // Avvio la procedura di invio verso l'intelligenza artificiale
+    inviaMessaggioAClaude(risultato.valore)                                    // Uso la nuova funzione coordinatrice
         .then(() => {
-            renderAllMessages();                                           // Aggiorno la chat con i nuovi messaggi
-            userMessageInputEl.value = '';                                 // Svuoto il campo così è pronto per il prossimo testo
-            bottoneInvio.disabled = false;                                 // Riaccendo il bottone perché tutto è andato bene
-            bottoneInvio.textContent = "Invia";
+            renderAllMessages();                                               // Disegno a video tutti i messaggi (vecchi e nuovi)
+            userMessageInputEl.value = '';                                     // Pulisco il campo di testo per un nuovo messaggio
         })
         .catch((errore) => {
-            console.error("Errore durante l'invio:", errore);
-            alert("Qualcosa è andato storto. Riprova tra un istante.");
+            console.error("Errore nella comunicazione:", errore);              // Registro l'errore tecnico in console
+            alert("Spiacente, non riesco a contattare l'IA in questo momento.");
         })
         .finally(() => {
-            bottoneInvio.disabled = false;                                 // Riaccendo il bottone comunque
-            bottoneInvio.textContent = "Invia";                            // Rimetto il testo originale
+            bottoneInvio.disabled = false;                                     // Riattivo il tasto per l'utente
+            bottoneInvio.textContent = "Invia";                                // Ripristino il testo originale del bottone
         });
 });
