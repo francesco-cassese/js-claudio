@@ -35,7 +35,7 @@ function validaMessaggio(testoGrezzo) {
         return { stato: statoErroriInput.troppoCorto, valore: testoPulito };
     }
 
-    // Tutto ok: restituisco il codice successo e il testo pronto
+    // restituisco il codice successo e il testo pronto
     return { stato: statoErroriInput.corretto, valore: testoPulito };
 }
 
