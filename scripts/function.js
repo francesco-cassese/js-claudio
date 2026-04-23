@@ -1,90 +1,10 @@
 'use strict';
 
 // ########################################################################################
-// CONFIGURAZIONE E UTILITY DI RETE
+// LOGICA DI VALIDAZIONE (CONTROLLO INPUT)
 // ########################################################################################
 
-/**
- * Esegue una fetch personalizzata che restituisce direttamente il JSON
- */
-function customFetch(url, options) {
-    return fetch(url, options)
-        .then(response => {
-            return response.json();                                        // Converte la risposta in oggetto JS
-        });
-}
-
-// ########################################################################################
-// GESTIONE MEMORIA E CHIAMATE API
-// ########################################################################################
-
-let history = [];                                                          // Memoria locale dei messaggi inviati/ricevuti
-
-/**
- * Gestisce l'invio del messaggio all'API di Claude e aggiorna la cronologia
- */
-function richiediAClaude(messaggio) {
-
-    history.push({                                                         // Aggiunge il messaggio dell'utente alla storia
-        role: 'user',
-        content: messaggio
-    });
-
-    const headers = {                                                      // Configura le autorizzazioni per l'API
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-        "anthropic-dangerous-direct-browser-access": "true"                // Permette l'accesso diretto dal browser
-    };
-
-    const requestObj = {                                                   // Prepara il corpo della richiesta 
-        model: CLAUDE_MODEL,
-        max_tokens: 1024,
-        messages: history                                                  // Invia l'intera cronologia per dare contesto
-    };
-
-    const requestObjStringhificato = JSON.stringify(requestObj);           // Trasforma l'oggetto in stringa JSON
-
-    return customFetch(CLAUDE_API_URL, {                                   // Esegue la chiamata POST verso l'endpoint
-        method: "POST",
-        headers,
-        body: requestObjStringhificato,
-    }).then(data => {
-
-        const claudeResponseMsg = data.content[0].text;                    // Estrae il testo della risposta dall'oggetto ricevuto
-
-        history.push({                                                     // Salva la risposta dell'AI nella cronologia
-            role: 'assistant',
-            content: claudeResponseMsg
-        });
-
-        return claudeResponseMsg;                                          // Ritorna il testo per utilizzi successivi
-    });
-}
-
-/**
- * Pulisce e ricrea l'interfaccia della chat ciclando sulla cronologia
- */
-function renderAllMessages() {
-    chatHistoryEl.innerHTML = '';
-
-    for (const message of history) {
-        const p = document.createElement('p');
-        const eUtente = message.role === 'user';                               // Controllo se il messaggio è mio o dell'AI
-
-        // Aggiungo una classe comune e una specifica
-        p.classList.add('message');                                            // Classe per le regole comuni 
-        p.classList.add(eUtente ? 'user-message' : 'ai-message');              // Classe specifica per il colore e la posizione
-
-        p.textContent = message.content;                                       // Inserisco il testo
-        chatHistoryEl.appendChild(p);
-    }
-}
-
-// ########################################################################################
-// CONTROLLI INPUT
-// ########################################################################################
-
+// Definisco i codici errore per capire esattamente cosa non va nell'input
 const statoErroriInput = {
     corretto: 0,
     nullo: -1,
@@ -92,25 +12,129 @@ const statoErroriInput = {
     troppoCorto: -3,
 };
 
-function controllaInput(testoGrezzo) {
-    // Controllo se il risultato esiste
+
+/**
+ * Pulisco il testo e verifico se è idoneo all'invio
+ */
+function validaMessaggio(testoGrezzo) {
+    // Verifico subito se l'oggetto esiste per evitare errori 
     if (testoGrezzo === null || typeof testoGrezzo === 'undefined') {
-        return { stato: statoErroriInput.nullo, valore: "" };              // Ritorno comunque una stringa vuota per coerenza
+        return { stato: statoErroriInput.nullo, valore: "" };         // Segnalo che il dato manca del tutto
     }
 
-    // Elimino spazi in eccesso all'inizio e alla fine
+    // Uso trim per ignorare gli spazi vuoti prima e dopo il testo
     const testoPulito = testoGrezzo.trim();
 
-    // Verifico se dopo aver tolto gli spazi che ci sia effettivamente qualcosa
+    // Se dopo la pulizia la stringa è vuota, non procedo
     if (testoPulito === "") {
-        return { stato: statoErroriInput.vuoto, valore: "" };              // Blocco l'invio perchè il messaggio è vuoto
+        return { stato: statoErroriInput.vuoto, valore: "" };         // Segnalo che il messaggio è solo spazi
     }
 
-    // Imposto un limite minimo per evitare che partano messaggi casuali
+    // Imposto un limite minimo di 2 caratteri per sicurezza
     if (testoPulito.length < 2) {
-        return { stato: statoErroriInput.troppoCorto, valore: testoPulito }; // Restituisco il testo per mostrarlo nell'alert
+        return { stato: statoErroriInput.troppoCorto, valore: testoPulito };
     }
 
-    // Se arrivo qui, restituisco l'oggetto con il testo validato
-    return { stato: statoErroriInput.corretto, valore: testoPulito };      // Passo il testo già pulito e validato
+    // Tutto ok: restituisco il codice successo e il testo pronto
+    return { stato: statoErroriInput.corretto, valore: testoPulito };
+}
+
+// ########################################################################################
+// GESTIONE DATI
+// ########################################################################################
+
+// Creo la memoria locale per conservare i messaggi e dare contesto all'IA
+let cronologiaMessaggi = [];
+
+/**
+ * Aggiunge un nuovo tassello alla conversazione nella memoria locale
+ */
+function aggiungiACronologia(ruolo, contenuto) {
+    // Inserisco un oggetto con ruolo (user/assistant) e il testo
+    cronologiaMessaggi.push({
+        role: ruolo,
+        content: contenuto
+    });
+}
+
+/**
+ * Prepara il "pacchetto" dati da spedire via internet
+ */
+function preparaOggettoRichiesta() {
+    // Trasformo l'oggetto JS in una stringa che il server può leggere
+    return JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 1024,
+        messages: cronologiaMessaggi                                  // Passo tutta la cronologia aggiornata
+    });
+}
+
+// ########################################################################################
+// VISUALIZZAZIONE
+// ########################################################################################
+
+/**
+ * Prende i dati dalla memoria e li trasforma in elementi visibili nell'HTML
+ */
+function renderAllMessages() {
+    // Svuoto il contenitore della chat per evitare di duplicare i messaggi ogni volta
+    chatHistoryEl.innerHTML = '';
+
+    // Uso il ciclo for...of per scorrere ogni singolo oggetto dentro l'array
+    for (const messaggio of cronologiaMessaggi) {
+
+        const p = document.createElement('p');                        // Creo un nuovo elemento paragrafo per il messaggio
+        const eUtente = messaggio.role === 'user';                    // Controllo se il ruolo è "user" per decidere lo stile
+
+        p.classList.add('message');                                   // Assegno la classe base definita nel CSS
+        p.classList.add(eUtente ? 'user-message' : 'ai-message');     // Assegno la classe specifica per il colore e il lato
+
+        p.textContent = messaggio.content;                            // Inserisco il testo del messaggio nel paragrafo
+        chatHistoryEl.appendChild(p);                                 // Aggiungo il paragrafo al contenitore visibile a video
+    }
+}
+
+// ########################################################################################
+// COMUNICAZIONE (CHIAMATE DI RETE)
+// ########################################################################################
+
+/**
+ * Esegue materialmente la chiamata HTTP verso il server
+ */
+function eseguiChiamataRete(url, configurazione) {
+    // Uso fetch e converto immediatamente il risultato in JSON
+    return fetch(url, configurazione)
+        .then(risposta => risposta.json());                           // Trasformo la risposta grezza in oggetto JS
+}
+
+/**
+ * Coordina l'invio del messaggio e riceve la risposta dall'IA
+ */
+function inviaMessaggioAClaude(testoMessaggio) {
+    // Per prima cosa salvo il messaggio che ho appena scritto
+    aggiungiACronologia('user', testoMessaggio);
+
+    // Preparo le testate con i permessi e la chiave segreta
+    const intestazioni = {
+        "x-api-key": CLAUDE_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+        "anthropic-dangerous-direct-browser-access": "true"
+    };
+
+    // Faccio partire la richiesta usando le funzioni di supporto
+    return eseguiChiamataRete(CLAUDE_API_URL, {
+        method: "POST",
+        headers: intestazioni,
+        body: preparaOggettoRichiesta()
+    }).then(datiRicevuti => {
+        // Estraggo il testo contenuto nella risposta complessa dell'API
+        const testoRispostaIA = datiRicevuti.content[0].text;
+
+        // Salvo anche la risposta dell'IA per non perdere il filo
+        aggiungiACronologia('assistant', testoRispostaIA);
+
+        // Restituisco il testo finale per poterlo stampare a video
+        return testoRispostaIA;
+    });
 }
