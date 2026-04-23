@@ -66,16 +66,16 @@ function richiediAClaude(messaggio) {
  * Pulisce e ricrea l'interfaccia della chat ciclando sulla cronologia
  */
 function renderAllMessages() {
-    chatHistoryEl.innerHTML = '';                                          // Svuota la vista attuale
+    chatHistoryEl.innerHTML = '';
 
-    let chatHtmlString = '';
-    for (const message of history) {                                       // Cicla ogni messaggio presente in memoria
-        chatHtmlString += `
-            <p>${message.role === 'user' ? 'IO' : 'AI'}: ${message.content}</p>
-        `
+    for (const message of history) {
+        const p = document.createElement('p');
+        const mittente = message.role === 'user' ? 'IO' : 'AI';
+
+        p.textContent = `${mittente}: ${message.content}`;
+
+        chatHistoryEl.appendChild(p);
     }
-
-    chatHistoryEl.innerHTML = chatHtmlString;                              // Inserisce il nuovo HTML generato nel DOM
 }
 
 // ########################################################################################
@@ -83,40 +83,31 @@ function renderAllMessages() {
 // ########################################################################################
 
 const statoErroriInput = {
-    corretto: 0,
-    nullo: -1,
-    vuoto: -2,
-    troppoCorto: -3,
-    troppoLungo: -4,
-    formatoErrato: -5
+    corretto: 0,                                                           // Tutto ok: posso procedere con l'invio
+    nullo: -1,                                                             // Il dato manca proprio (errore tecnico)
+    vuoto: -2,                                                             // L'utente ha premuto invio senza scrivere
+    troppoCorto: -3,                                                       // Messaggio troppo breve per l'AI
 };
 
 function controllaInput(testoGrezzo) {
+    // Controllo se il risultato esiste
     if (testoGrezzo === null || typeof testoGrezzo === 'undefined') {
-        return { stato: statoErroriInput.nullo, valore: "" };
+        return { stato: statoErroriInput.nullo, valore: "" };              // Ritorno comunque una stringa vuota per coerenza
     }
 
+    // Elimino spazi in eccesso all'inizio e alla fine
     const testoPulito = testoGrezzo.trim();
 
-
+    // Verifico se dopo aver tolto gli spazi che ci sia effettivamente qualcosa
     if (testoPulito === "") {
-        return { stato: statoErroriInput.vuoto, valore: "" };
+        return { stato: statoErroriInput.vuoto, valore: "" };              // Blocco l'invio perchè il messaggio è vuoto
     }
 
-
+    // Imposto un limite minimo per evitare che partano messaggi casuali
     if (testoPulito.length < 2) {
-        return { stato: statoErroriInput.troppoCorto, valore: testoPulito };
+        return { stato: statoErroriInput.troppoCorto, valore: testoPulito }; // Restituisco il testo per mostrarlo nell'alert
     }
 
-
-    if (testoPulito.length > 5000) {
-        return { stato: statoErroriInput.troppoLungo, valore: testoPulito };
-    }
-
-
-    if (testoPulito.includes("<") && testoPulito.includes(">")) {
-        return { stato: statoErroriInput.formatoErrato, valore: testoPulito };
-    }
-
-    return { stato: statoErroriInput.corretto, valore: testoPulito };
+    // Se arrivo qui, restituisco l'oggetto con il testo validato
+    return { stato: statoErroriInput.corretto, valore: testoPulito };      // Passo il testo già pulito e validato
 }

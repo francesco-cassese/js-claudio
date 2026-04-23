@@ -18,39 +18,38 @@ if (typeof CLAUDE_API_KEY === 'undefined' || typeof CLAUDE_API_KEY !== 'string' 
     alert("Rinomina il file config.js.example e riempilo con le variabili corrette");
 }
 
-// Gestione dell'invio del modulo (Submit)
 sendMessageFormEl.addEventListener('submit', (event) => {
-    event.preventDefault();                                                // Impedisce il ricaricamento della pagina
+    event.preventDefault();                                                // Evito che la pagina si ricarichi
 
-    const message = userMessageInputEl.value;                              // Recupera il testo scritto dall'utente
+    // Prendo quello che l'utente ha scritto nel campo di testo
+    const valoreInput = userMessageInputEl.value;
 
-    const risultato = controllaInput(inputGrezzo);
+    // Chiedo alla mia funziona se il messaggio è validato
+    const risultato = controllaInput(valoreInput);
 
+    // Controllo se il risultato è diverso da "corretto"
     if (risultato.stato !== statoErroriInput.corretto) {
 
+        // Se è nullo, avviso l'utente del problema tecnico
         if (risultato.stato === statoErroriInput.nullo) {
-            alert("C'è stato un problema: il messaggio risulta inesistente.");
+            alert("Problema tecnico: messaggio inesistente.");
         }
+        // Se è vuoto, ricordo all'utente di scrivere qualcosa
         else if (risultato.stato === statoErroriInput.vuoto) {
-            alert("Non puoi inviare un messaggio vuoto. Scrivi qualcosa!");
+            alert("Non puoi inviare un messaggio vuoto!");
         }
+        // Se è troppo corto, gli mostro anche cosa ha scritto per chiarezza
         else if (risultato.stato === statoErroriInput.troppoCorto) {
-            alert(`${risultato.valore} è troppo corto. Scrivi almeno 2 caratteri.`);
+            alert(`"${risultato.valore}" è troppo corto.`);
         }
 
-        else if (risultato.stato === statoErroriInput.troppoLungo) {
-            alert("Il messaggio è troppo lungo! Prova a riassumere o dividere la domanda.");
-        }
-        else if (risultato.stato === statoErroriInput.formatoErrato) {
-            alert("Per motivi di sicurezza, non puoi usare i simboli < e > nei tuoi messaggi.");
-        }
-
-        return;
+        return;                                                            // Esco subito: non voglio che il codice prosegua
     }
 
-    richiediAClaude(message)                                               // Avvia la richiesta asincrona all'AI
-        .then(rispostaDiClaude => {
-            renderAllMessages();                                           // Aggiorna l'interfaccia a risposta ricevuta
-            userMessageInputEl.value = '';                                 // Pulisce il campo di input
+    // Se tutto è corretto, invio a Claude solo il valore pulito 
+    richiediAClaude(risultato.valore)
+        .then(() => {
+            renderAllMessages();                                           // Aggiorno la chat con i nuovi messaggi
+            userMessageInputEl.value = '';                                 // Svuoto il campo così è pronto per il prossimo testo
         });
 });
