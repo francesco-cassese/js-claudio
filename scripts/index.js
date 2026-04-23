@@ -60,7 +60,7 @@ sendMessageFormEl.addEventListener('submit', (event) => {
         })
         .catch((errore) => {
             console.error("Errore durante l'invio:", errore);
-            alert("Ops! Qualcosa è andato storto. Riprova tra un istante.");
+            alert("Qualcosa è andato storto. Riprova tra un istante.");
         })
         .finally(() => {
             bottoneInvio.disabled = false;                                 // Riaccendo il bottone comunque
