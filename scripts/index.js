@@ -59,11 +59,11 @@ sendMessageFormEl.addEventListener('submit', (event) => {
             bottoneInvio.textContent = "Invia";
         })
         .catch((errore) => {
-            // 3. Fase di emergenza
             console.error("Errore durante l'invio:", errore);
             alert("Ops! Qualcosa è andato storto. Riprova tra un istante.");
-
-            bottoneInvio.disabled = false;                                     // DEVO riaccenderlo qui, altrimenti l'utente è bloccato
-            bottoneInvio.textContent = "Invia";                                // Ripristino il testo anche in caso di errore
+        })
+        .finally(() => {
+            bottoneInvio.disabled = false;                                 // Riaccendo il bottone comunque
+            bottoneInvio.textContent = "Invia";                            // Rimetto il testo originale
         });
 });
