@@ -70,10 +70,13 @@ function renderAllMessages() {
 
     for (const message of history) {
         const p = document.createElement('p');
-        const mittente = message.role === 'user' ? 'IO' : 'AI';
+        const eUtente = message.role === 'user';                               // Controllo se il messaggio è mio o dell'AI
 
-        p.textContent = `${mittente}: ${message.content}`;
+        // Aggiungo una classe comune e una specifica
+        p.classList.add('message');                                            // Classe per le regole comuni 
+        p.classList.add(eUtente ? 'user-message' : 'ai-message');              // Classe specifica per il colore e la posizione
 
+        p.textContent = message.content;                                       // Inserisco il testo
         chatHistoryEl.appendChild(p);
     }
 }
@@ -83,10 +86,10 @@ function renderAllMessages() {
 // ########################################################################################
 
 const statoErroriInput = {
-    corretto: 0,                                                           // Tutto ok: posso procedere con l'invio
-    nullo: -1,                                                             // Il dato manca proprio (errore tecnico)
-    vuoto: -2,                                                             // L'utente ha premuto invio senza scrivere
-    troppoCorto: -3,                                                       // Messaggio troppo breve per l'AI
+    corretto: 0,
+    nullo: -1,
+    vuoto: -2,
+    troppoCorto: -3,
 };
 
 function controllaInput(testoGrezzo) {
