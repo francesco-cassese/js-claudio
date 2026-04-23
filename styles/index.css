@@ -1,8 +1,46 @@
+/* 
+    ########################################################################################
+    RESET
+    ######################################################################################## 
+*/
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
+/* ########################################################################################
+   ROOT
+   ######################################################################################## */
+
+:root {
+    /* Sfondi e Layout */
+    --bg-gradient-start: #1e1e2f;
+    --bg-gradient-end: #2d2d44;
+    --container-bg: #2b2b3d;
+    --history-bg: #35354a;
+    --input-bg: #1e1e2f;
+
+    /* Messaggi */
+    --msg-user-bg: #0084ff;
+    --msg-user-text: #ffffff;
+    --msg-ai-bg: #e4e6eb;
+    --msg-ai-text: #1c1e21;
+
+    /* Elementi Interattivi */
+    --accent-color: #7289da;
+    --accent-hover: #5b6eae;
+    --border-color: #4a4a6a;
+    --text-main: #ffffff;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/*
+    ######################################################################################## 
+    IMPOSTAZIONI GENERALI
+    ######################################################################################## 
+*/
 
 main {
     width: 100%;
@@ -10,33 +48,43 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #1e1e2f, #2d2d44);
+    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* 
+    ########################################################################################
+    CONTENITORE PRINCIPALE
+    ######################################################################################## 
+*/
 
 .chat-container {
     width: 90%;
     max-width: 500px;
-    background-color: #2b2b3d;
+    background-color: var(--container-bg);
     border-radius: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px var(--shadow-color);
     overflow: hidden;
 }
 
 .chat-container h1 {
-    color: #ffffff;
+    color: var(--text-main);
     text-align: center;
     padding: 25px 0;
     font-weight: 300;
     letter-spacing: 1px;
 }
 
+/*
+    ########################################################################################
+    STORICO MESSAGGI
+    ######################################################################################## 
+*/
 
 #chat-history {
     width: 100%;
     height: 450px;
-    background-color: #35354a;
+    background-color: var(--history-bg);
     border: none;
     padding: 20px;
     overflow-y: auto;
@@ -45,6 +93,11 @@ main {
     gap: 12px;
 }
 
+/*
+    ########################################################################################
+    STILE DEI SINGOLI MESSAGGI
+    ########################################################################################
+ */
 
 .message {
     padding: 10px 15px;
@@ -55,46 +108,50 @@ main {
     word-wrap: break-word;
 }
 
-
 .user-message {
     align-self: flex-end;
-    background-color: #0084ff;
-    color: white;
+    background-color: var(--msg-user-bg);
+    color: var(--msg-user-text);
 }
 
 .ai-message {
     align-self: flex-start;
-    background-color: #e4e6eb;
-    color: #1c1e21;
+    background-color: var(--msg-ai-bg);
+    color: var(--msg-ai-text);
 }
 
+/* 
+    ########################################################################################
+    FORM E BOTTONE
+    ######################################################################################## 
+*/
 
 #send-message-form {
     display: flex;
     gap: 10px;
     padding: 20px;
-    background-color: #2b2b3d;
+    background-color: var(--container-bg);
 }
 
 #send-message-form input[type="text"] {
     flex-grow: 1;
     padding: 12px 18px;
     border-radius: 12px;
-    border: 1px solid #4a4a6a;
-    background-color: #1e1e2f;
-    color: white;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-main);
     outline: none;
     transition: border 0.3s;
 }
 
 #send-message-form input[type="text"]:focus {
-    border-color: #7289da;
+    border-color: var(--accent-color);
 }
 
 #send-message-form button[type="submit"] {
     padding: 10px 25px;
-    color: white;
-    background-color: #7289da;
+    color: var(--text-main);
+    background-color: var(--accent-color);
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -103,6 +160,6 @@ main {
 }
 
 #send-message-form button[type="submit"]:hover {
-    background-color: #5b6eae;
+    background-color: var(--accent-hover);
     transform: translateY(-2px);
 }
