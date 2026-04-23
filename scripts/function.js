@@ -50,7 +50,7 @@ let cronologiaMessaggi = [];
  * Aggiunge un nuovo tassello alla conversazione nella memoria locale
  */
 function aggiungiACronologia(ruolo, contenuto) {
-    // Inserisco un oggetto con ruolo (user/assistant) e il testo
+    // Inserisco un oggetto con ruolo e il testo
     cronologiaMessaggi.push({
         role: ruolo,
         content: contenuto
