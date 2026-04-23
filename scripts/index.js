@@ -4,9 +4,11 @@
 // ########################################################################################
 
 // Elementi del DOM necessari per l'interazione
-const chatHistoryEl = document.querySelector('#chat-history');             // Contenitore della chat
-const sendMessageFormEl = document.querySelector('#send-message-form');     // Form di invio
-const userMessageInputEl = document.querySelector('#user-message');        // Campo di testo input
+const chatHistoryEl = document.querySelector('#chat-history');
+const sendMessageFormEl = document.querySelector('#send-message-form');
+const bottoneInvio = sendMessageFormEl.querySelector('button[type="submit"]');
+const userMessageInputEl = document.querySelector('#user-message');
+
 
 // ########################################################################################
 // LOGICA DI AVVIO E GESTIONE EVENTI
@@ -45,11 +47,23 @@ sendMessageFormEl.addEventListener('submit', (event) => {
 
         return;                                                            // Esco subito: non voglio che il codice prosegua
     }
+    bottoneInvio.disabled = true;                                              // Spengo il bottone appena l'utente clicca
+    bottoneInvio.textContent = "...";                                          // Cambio il testo per dare feedback
 
     // Se tutto è corretto, invio a Claude solo il valore pulito 
     richiediAClaude(risultato.valore)
         .then(() => {
             renderAllMessages();                                           // Aggiorno la chat con i nuovi messaggi
             userMessageInputEl.value = '';                                 // Svuoto il campo così è pronto per il prossimo testo
+            bottoneInvio.disabled = false;                                 // Riaccendo il bottone perché tutto è andato bene
+            bottoneInvio.textContent = "Invia";
+        })
+        .catch((errore) => {
+            // 3. Fase di emergenza
+            console.error("Errore durante l'invio:", errore);
+            alert("Ops! Qualcosa è andato storto. Riprova tra un istante.");
+
+            bottoneInvio.disabled = false;                                     // DEVO riaccenderlo qui, altrimenti l'utente è bloccato
+            bottoneInvio.textContent = "Invia";                                // Ripristino il testo anche in caso di errore
         });
 });
